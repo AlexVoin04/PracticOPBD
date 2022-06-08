@@ -8,33 +8,38 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Drawing.Drawing2D;
 
 namespace BDHotel
 {
     public partial class Form1 : Form
     {
+        public string comboText1;
+        public string comboText2;
         public static int idmax;
 
-        public void GetEmployees(string a, string b, string c)
+        public void GetEmployees(string a, string b, string c, string d)
         {
-            using (SqlConnection Con = new SqlConnection(@"Data Source=DESKTOP-DEKVKMF\SQLEXPRESS;Initial Catalog=Hotel;Integrated Security=True"))
+            using (SqlConnection Con = new SqlConnection(@"Data Source=DESKTOP-DEKVKMF\SQLEXPRESS;Initial Catalog=ОПБД;Integrated Security=True"))
             {
                 Con.Open();
-                string query = "SELECT" +
-                                "[Полное имя] = E.[Name] + ' ' + E.[Surname]," +
-                                "[Отчество (если есть)] = [Patronymic]," +
-                                "[Дата рождения] = IAE.[Born]," +
-                                "[Номер телефона] = IAE.[Tel]," +
-                                "[Серия паспорта] = IAE.[PasspSerries]," +
-                                "[Номер паспорта] = IAE.[PasspNumber]," +
-                                "[Должность] = P.[Post]," +
-                                "[Оклад] = P.[Salary]" +
-                                "FROM [Employees] AS E " +
-                                "JOIN [EmployeeInformation] AS EI ON E.ID = EI.EmployeesID " +
-                                "JOIN [InformationAboutEmployees] AS IAE ON EI.InformationAboutEmployeesID = IAE.ID " +
-                                "JOIN[Posts] AS P ON IAE.PostsID = P.ID " +
+                string query = $"SELECT {d} " +
+                                "C.ID, " +
+                                "[Фамилия] = C.[LastName], " +
+                                "[Имя] = C.[FirstName], " +
+                                "[Отчество] = [Patronymic], " +
+                                "[Пол] = G.[Name], " +
+                                "[Телефона] = C.[Phone], " +
+                                "[Email] = C.[Email], " +
+                                "[Дата рождения] = C.[Birthday], " +
+                                "[Дата регестрации] = CS.[StartTime] " +
+                                "FROM [Gender] AS G " +
+                                "JOIN [Client] AS C ON C.GenderCode = G.Code " +
+                                "JOIN [ClientService] AS CS ON CS.ClientID = C.ID " +
+                                "JOIN [Service] AS S ON CS.ServiceID = S.ID  " +
                                 $"{c} " +
-                                $"ORDER BY E.[{a}] {b}";
+                                $"{a}";
+                //$"ORDER BY E.[{a}] {b}";
                 SqlCommand command = new SqlCommand(query, Con);
                 SqlDataReader reader = command.ExecuteReader();
                 DataTable dt = new DataTable();
@@ -45,14 +50,15 @@ namespace BDHotel
                     Grid_Employees.Visible = true;
                     Grid_Employees.DataSource = dt;
                     Grid_Employees.Update();
-                    Grid_Employees.Columns[0].Width = 173; // ФИ
-                    Grid_Employees.Columns[1].Width = 150; // О
-                    Grid_Employees.Columns[2].Width = 100; // ДР
-                    Grid_Employees.Columns[3].Width = 100; // Номер телефона
-                    Grid_Employees.Columns[4].Width = 100; // Серия паспорта
-                    Grid_Employees.Columns[5].Width = 100; // Номер паспорта
-                    Grid_Employees.Columns[6].Width = 170; // Должность
-                    Grid_Employees.Columns[7].Width = 110; // Оклад
+                    Grid_Employees.Columns[0].Width = 50; 
+                    Grid_Employees.Columns[1].Width = 150; 
+                    Grid_Employees.Columns[2].Width = 150; 
+                    Grid_Employees.Columns[3].Width = 150; 
+                    Grid_Employees.Columns[4].Width = 100; 
+                    Grid_Employees.Columns[5].Width = 150; 
+                    Grid_Employees.Columns[6].Width = 170; 
+                    Grid_Employees.Columns[7].Width = 150;
+                    Grid_Employees.Columns[8].Width = 170;
                 }
                 else
                 {
@@ -63,20 +69,27 @@ namespace BDHotel
         public Form1()
         {
             InitializeComponent();
-            GetEmployees("ID", "ASC","");
-            using (SqlConnection Con = new SqlConnection(@"Data Source=DESKTOP-DEKVKMF\SQLEXPRESS;Initial Catalog=Hotel;Integrated Security=True"))
-            {
-                Con.Open();
-                string query = "SELECT [ID] = P.ID,[Post] = P.[Post] FROM [Posts] AS P";
-                SqlCommand command = new SqlCommand(query, Con);
-                SqlDataReader reader = command.ExecuteReader();
-                DataTable dt = new DataTable();
-                dt.Load(reader);
-                CB_Post.DataSource = dt;
-                CB_Post.ValueMember = "ID";
-                CB_Post.DisplayMember = "Post";
-                Con.Close();
-            }
+            SetRoundedShape(bt_Add, 30);
+            SetRoundedShape(button1, 30);
+            SetRoundedShape(button2, 30);
+            SetRoundedShape(button3, 30);
+            SetRoundedShape(button4, 30);
+            comboBox1.SelectedIndex = 0;
+            comboBox2.SelectedIndex = 0;
+            GetEmployees("","","","");
+            //using (SqlConnection Con = new SqlConnection(@"Data Source=DESKTOP-DEKVKMF\SQLEXPRESS;Initial Catalog=ОПБД;Integrated Security=True"))
+            //{
+            //    Con.Open();
+            //    string query = "SELECT [ID] = P.ID,[Post] = P.[Post] FROM [Posts] AS P";
+            //    SqlCommand command = new SqlCommand(query, Con);
+            //    SqlDataReader reader = command.ExecuteReader();
+            //    DataTable dt = new DataTable();
+            //    dt.Load(reader);
+            //    CB_Post.DataSource = dt;
+            //    CB_Post.ValueMember = "ID";
+            //    CB_Post.DisplayMember = "Post";
+            //    Con.Close();
+            //}
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -93,7 +106,7 @@ namespace BDHotel
 
         private void MainForm_Activated(object sender, EventArgs e)
         {
-            GetEmployees("ID", "ASC", "");
+
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -110,40 +123,76 @@ namespace BDHotel
             this.Hide();
         }
 
-
-        private void bt_Sort1_Click(object sender, EventArgs e)
-        {
-            GetEmployees("Name","ASC","");
-        }
-
-        private void bt_Sort2_Click(object sender, EventArgs e)
-        {
-            GetEmployees("Name","DESC","");
-        }
-
         private void button3_Click(object sender, EventArgs e)
         {
-            GetEmployees("ID", "ASC","");
+            comboBox1.SelectedIndex = 0;
+            comboBox2.SelectedIndex = 0;
+            textBox1.Text = "";
+            textBox2.Text = "";
+            textBox3.Text = "";
+            GetEmployees("", "","", "");
         }
 
-        private void bt_Search_Click(object sender, EventArgs e)
+        public static void SetRoundedShape(Control control, int radius)
         {
-            GetEmployees("ID", "ASC", $"WHERE P.[Post] = '{CB_Post.Text}'");
+            GraphicsPath path = new GraphicsPath();
+            path.AddLine(radius, 0, control.Width - radius, 0);
+            path.AddArc(control.Width - radius, 0, radius, radius, 270, 90);
+            path.AddLine(control.Width, radius, control.Width, control.Height - radius);
+            path.AddArc(control.Width - radius, control.Height - radius, radius, radius, 0, 90);
+            path.AddLine(control.Width - radius, control.Height, radius, control.Height);
+            path.AddArc(0, control.Height - radius, radius, radius, 90, 90);
+            path.AddLine(0, control.Height - radius, 0, radius);
+            path.AddArc(0, 0, radius, radius, 180, 90);
+            control.Region = new Region(path);
         }
 
-        private void label2_Click(object sender, EventArgs e)
+        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
-
+            if(comboBox1.Text == "All")
+            {
+                comboText1 = "";
+                GetEmployees("", "", "", comboText2);
+            }
+            else if (comboBox1.Text == "Мужской")
+            {
+                comboText1 = "WHERE G.Name = 'Мужской'";
+                GetEmployees("", "", "WHERE G.Name = 'Мужской'", comboText2);
+            }
+            else if (comboBox1.Text == "Женский")
+            {
+                comboText1 = "WHERE G.Name = 'Женский'";
+                GetEmployees("", "", "WHERE G.Name = 'Женский'", comboText2);
+            }
         }
 
-        private void bt_SearchFN_Click(object sender, EventArgs e)
+        private void comboBox2_SelectedIndexChanged(object sender, EventArgs e)
         {
-            GetEmployees("ID", "ASC", $"WHERE E.[Name] LIKE '{txt_Search.Text}%'");
+            if (comboBox2.Text == "All")
+            {
+                comboText2 = "";
+                GetEmployees("", "", comboText1, "");
+            }
+            else if (comboBox2.Text == "10")
+            {
+                comboText2 = "TOP (10)";
+                GetEmployees("", "", comboText1, "TOP (10)");
+            }
+            else if (comboBox2.Text == "50")
+            {
+                comboText2 = "TOP (50)";
+                GetEmployees("", "", comboText1, "TOP (50)");
+            }
+            else if (comboBox2.Text == "100")
+            {
+                comboText2 = "TOP (100)";
+                GetEmployees("", "", comboText1, "TOP (100)");
+            }
         }
 
-        private void bt_SearchLN_Click(object sender, EventArgs e)
+        private void button4_Click(object sender, EventArgs e)
         {
-            GetEmployees("ID", "ASC", $"WHERE E.[Surname] LIKE '{txt_Search.Text}%'");
+            GetEmployees($"AND (C.LastName Like '{textBox1.Text}%' OR C.[FirstName] like '{textBox1.Text}%' OR C.[Patronymic] like '{textBox1.Text}%') AND (C.Phone like '%{textBox2.Text}%') AND (C.Email like '%{textBox3.Text}%')", "", comboText1, comboText2);
         }
     }
 }
